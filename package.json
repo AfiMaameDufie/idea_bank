@@ -1,0 +1,13 @@
+{
+  "name": "idea-bank",
+  "version": "1.0.0",
+  "description": "A local web app to store and manage project ideas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.2.0",
+    "express": "^4.18.2"
+  }
+}
