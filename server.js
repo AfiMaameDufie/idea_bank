@@ -32,8 +32,9 @@ function parseTags(raw) {
 }
 
 function serializeTags(tags) {
+  if (typeof tags === 'string') return tags.trim();
   if (!Array.isArray(tags)) return '';
-  return tags.map(t => t.trim()).filter(Boolean).join(',');
+  return tags.map(t => String(t).trim()).filter(Boolean).join(',');
 }
 
 function rowToIdea(row) {
@@ -69,7 +70,7 @@ app.post('/api/ideas', (req, res) => {
   const stmt = db.prepare(
     'INSERT INTO ideas (title, description, tags) VALUES (?, ?, ?)'
   );
-  const result = stmt.run(title.trim(), description.trim(), serializeTags(tags));
+  const result = stmt.run(title.trim(), String(description ?? '').trim(), serializeTags(tags));
   const row = db.prepare('SELECT * FROM ideas WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(rowToIdea(row));
 });
@@ -85,7 +86,7 @@ app.put('/api/ideas/:id', (req, res) => {
 
   db.prepare(
     `UPDATE ideas SET title = ?, description = ?, tags = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(title.trim(), description.trim(), serializeTags(tags), req.params.id);
+  ).run(title.trim(), String(description ?? '').trim(), serializeTags(tags), req.params.id);
 
   const row = db.prepare('SELECT * FROM ideas WHERE id = ?').get(req.params.id);
   res.json(rowToIdea(row));
@@ -97,6 +98,11 @@ app.delete('/api/ideas/:id', (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Not found' });
   db.prepare('DELETE FROM ideas WHERE id = ?').run(req.params.id);
   res.status(204).end();
+});
+
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: err.message || 'Internal error' });
 });
 
 app.listen(PORT, () => {
